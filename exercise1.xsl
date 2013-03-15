@@ -7,23 +7,34 @@
     </head>
     <body>
     <xsl:apply-templates/>
-    
     </body>
     </html>
   </xsl:template>
+  
   <xsl:template match="/*">
     <table width="600" border="1">
-      <xsl:apply-templates select="*">
+    	<thead>
+    		<tr><xsl:apply-templates select="*[1]/*" mode="th"/></tr>
+   	    </thead>
+   	 <xsl:apply-templates select="*">
         <xsl:sort select="*"/>
       </xsl:apply-templates>
-    </table>
+    </table> 
   </xsl:template>
+  
+  <xsl:template match="/*/*/*" mode="th">
+  	<th>
+    	<xsl:value-of select="name()"/>
+    </th>
+  </xsl:template>
+
   <xsl:template match="/*/*">
     <!--selecting the element nodes-->
     <tr>
       <xsl:apply-templates select="*"/>
     </tr>
   </xsl:template>
+  
   <xsl:template match="/*/*/*">
     <!--selecting the text nodes-->
     <td><xsl:value-of select="."/></td>

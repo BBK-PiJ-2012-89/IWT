@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Exercise 2</title> 
+<script type="text/javascript">
+	
+	function loadXML(url) {
+		
+	  if(window.XMLHttpRequest)
+	  	{
+		xhr=new XMLHttpRequest();
+		} 
+	else //internet explorer
+		{
+		xhr=new ActiveXObject("Microsoft.XMLHTTP");
+		}
+	  xhr.open("GET",url,false);
+	  xhr.send("");
+	  return xhr.responseXML;
+	}
+	
+	
+	function showXML(){
+		
+		var getTheFile = document.getElementById("getAFile").value;		
+		var xmlDoc = loadXML(getTheFile);
+		
+		var xsl=loadXML("exercise1.xsl");
+		
+  		var root = xmlDoc.documentElement;
+		var firstTier = root.childNodes;
+		
+		document.write("<table>");
+		for (var i = 0; i < firstTier.length; i++) {
+			document.write("<tr><td>", firstTier[i].childNodes[0], "</td></tr>");
+		}
+		document.write("</table>");
+  		document.write("<p>root element of document is: <em>",
+                 root.nodeName, "</em></p>");
+	}
+	
+	
+</script>
+</head>
+
+<body>
+
+
+<div id="getFile">
+  <form method="post" onSubmit="return showXML()">
+    Which XML file should I load?
+    <input id="getAFile" type="text">
+    <button type="Submit">Submit</button>
+  </form>  
+</div>  
+</body>
+</html>

@@ -26,34 +26,89 @@
 		
 		var getTheFile = document.getElementById("getAFile").value;		
 		var xmlDoc = loadXML(getTheFile);
+				
+		var stylesheet = loadXML("exercise1.xsl");
 		
-		var xsl=loadXML("exercise1.xsl");
-		
-  		var root = xmlDoc.documentElement;
-		var firstTier = root.childNodes;
-		
-		document.write("<table>");
-		for (var i = 0; i < firstTier.length; i++) {
-			document.write("<tr><td>", firstTier[i].childNodes[0], "</td></tr>");
-		}
-		document.write("</table>");
-  		document.write("<p>root element of document is: <em>",
-                 root.nodeName, "</em></p>");
+		if (typeof (XSLTProcessor) != "undefined") {
+		  var processor = new XSLTProcessor();
+		  processor.importStylesheet(stylesheet);
+		  var result = processor.transformToFragment(xmlDoc, document);
+		  document.getElementById("tableArea").appendChild(result);
+		} else
+		  document.write(xmlDoc.transformNode(stylesheet));
+	return false;
 	}
 	
-	
+	function populateDropdown(){
+		var years = document.getElementById('year');
+		var option = document.createElement('option');
+		for(var i = 1900; i < 2013; i++){
+			option.text = i;
+			years.add(new Option(i, i));
+		}
+	}
+		
 </script>
 </head>
 
-<body>
+<body onLoad="populateDropdown()">
 
 
 <div id="getFile">
-  <form method="post" onSubmit="return showXML()">
+  <form method="post" onsubmit="return showXML()">
     Which XML file should I load?
     <input id="getAFile" type="text">
+    <br />
+    <br />
+    Timespan:   
+    <select id="date">
+        <option value=">">After</option>
+        <option value="<">Before</option>
+    </select>
+    <select name="year" id="year">
+    	<option id="getYear" class="blank" ></option>
+    </select>
+    <br />
+    <br />
+    Sort By:	
+    <select id="sortBy">
+    	<option class="blank"/>
+    	<option value="year">Year</option>
+        <option value="author">Author</option>
+        <option value="title">Title</option>
+   	</select>
+    <br />
+    What order would you like?
+    Column 1:
+    <select id="column1">
+    	<option class="blank"/>
+        <option value="year">Year</option>
+        <option value="author">Author</option>
+        <option value="title">Title</option>
+     </select>
+     Column 2:
+    <select id="column2">
+    	<option class="blank"/>
+        <option value="year">Year</option>
+        <option value="author">Author</option>
+        <option value="title">Title</option>
+     </select>
+     Column 3:
+    <select id="column3">
+    	<option class="blank"/>
+        <option value="year">Year</option>
+        <option value="author">Author</option>
+        <option value="title">Title</option>
+     </select>
+    <br />
+    <br />
+    <br />
     <button type="Submit">Submit</button>
   </form>  
 </div>  
+<br />
+<br />
+<br />
+<div id="tableArea"> </div>
 </body>
 </html>

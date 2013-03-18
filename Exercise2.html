@@ -21,21 +21,106 @@
 	  return xhr.responseXML;
 	}
 	
-	
 	function showXML(){
 		
+		//get and load xml and xsl files
 		var getTheFile = document.getElementById("getAFile").value;		
-		var xmlDoc = loadXML(getTheFile);
-				
+		var xmlDoc = loadXML(getTheFile);	
 		var stylesheet = loadXML("exercise1.xsl");
 		
-		if (typeof (XSLTProcessor) != "undefined") {
-		  var processor = new XSLTProcessor();
-		  processor.importStylesheet(stylesheet);
-		  var result = processor.transformToFragment(xmlDoc, document);
-		  document.getElementById("tableArea").appendChild(result);
-		} else
-		  document.write(xmlDoc.transformNode(stylesheet));
+		//retrieve timespan of return table desired
+		var beforeAfter = document.getElementById("date");
+			var afterBefore = beforeAfter.options[beforeAfter.selectedIndex].value;
+			var yearChoice = document.getElementById("year");
+			var choiceYear = yearChoice.options[yearChoice.selectedIndex].value;
+			
+			var yearSort = "*";
+			
+			//concatenate xpath predicate
+			if(yearChoice !="" && beforeAfter !="" && yearChoice !=null && beforeAfter !=null){
+				yearSort += "year[" + afterBefore + choiceYear + "]";
+			}
+			
+			 //setting the default values is user leaves dropdowns blank
+			var sortBy = "year";   
+				   
+			var table = stylesheet.getElementsByTagName("table");
+			
+		  //initial values
+		  var columnOrder = "*";
+		  var tableHeader = "*[1]/";
+		  var tableHeadSpace = "*[1]/";
+		  
+		  var columnChoice = document.getElementById("columnOrder");
+		  
+		  if(columnChoice != null && columnChoice != ""){
+			  columnOrder = "";
+			  var columnSplit = columnChoice.split(",");
+			  for(var i = 0; i < columnSplit.length; i++){
+				  columnOrder += columnSplit[i];
+				  tableHeader += columnSplit[i];
+				  if(i !=(columnSplit.length-1)){
+					  columnChoice+= " | ";
+					  tableHeadSpace += (" | " + tableHeadSpace);
+				  }
+			  }
+		  }
+		  
+		  //Bri
+		  var headerVariables = stylesheet.getElementsByTagName("xsl:for-each");
+		  var getElements = stylesheet.getElementsByTagName("tr");
+		
+		//Checks if Firefox
+		if (document.implementation && document.implementation.createDocument){
+			//removing namespaces
+  			var nsResolver = stylesheet.createNSResolver(
+                   stylesheet.ownerDocument == null ?
+                   stylesheet.documentElement :
+                   stylesheet.ownerDocument.documentElement);
+				   
+				   //evaluating stylesheet
+ 		 	var value = stylesheet.evaluate(
+                   "//xsl:sort",
+                   stylesheet, nsResolver,
+                   XPathResult.ANY_UNORDERED_NODE_TYPE, null);
+			
+			var columnDisplay = getElements[0].firstElementChild;
+			columnDisplay.setAttribute("select", columnOrder);
+			
+			//if the user chose a timespan
+			if(yearSort !="*"){
+				var yearOrg = table[0].firstElementChild;
+				yearOrg = setAttribute("select", yearSort);
+			}
+			
+			//column titles
+			if(tableHeader != "*[1]/"){
+				var headline = headerVariables[0]
+				headline.setAttribute("select", tableHeader);
+			}
+			
+			value.singlNodeValue.setAttribute("select", sortBy);
+
+		  var proc = new XSLTProcessor();
+		  proc.importStylesheet(stylesheet);
+		  
+		  var resultFragment = proc.transformToFragment(xmlDoc, document);
+		  document.getElementById("tableArea").appendChild(resultFragment);
+		  
+		 //if using Windows 
+		}/* else {
+    		var value = stylesheet.selectSingleNode(
+            "//xsl:sort");
+    		value.setAttribute("select", "description");
+		   var xslt = new ActiveXObject("Msxml2.XSLTemplate");
+		   var xslDoc = new ActiveXObject("Msxml2.FreeThreadedDOMDocument");
+		   xslDoc.loadXML(xsltDoc.xml);
+		   xslt.stylesheet = xslDoc;
+		   var xslProc = xslt.createProcessor();
+		   xslProc.input = xmlDoc;
+		   xslProc.transform();
+		   return xslProc.output;
+		}*/
 	return false;
 	}
 	
@@ -53,15 +138,15 @@
 
 <body onLoad="populateDropdown()">
 
-
 <div id="getFile">
-  <form method="post" onsubmit="return showXML()">
+  <form method="post" onSubmit="return showXML()">
     Which XML file should I load?
     <input id="getAFile" type="text">
     <br />
     <br />
     Timespan:   
     <select id="date">
+    	<option class="blank"/>
         <option value=">">After</option>
         <option value="<">Before</option>
     </select>
@@ -78,28 +163,8 @@
         <option value="title">Title</option>
    	</select>
     <br />
-    What order would you like?
-    Column 1:
-    <select id="column1">
-    	<option class="blank"/>
-        <option value="year">Year</option>
-        <option value="author">Author</option>
-        <option value="title">Title</option>
-     </select>
-     Column 2:
-    <select id="column2">
-    	<option class="blank"/>
-        <option value="year">Year</option>
-        <option value="author">Author</option>
-        <option value="title">Title</option>
-     </select>
-     Column 3:
-    <select id="column3">
-    	<option class="blank"/>
-        <option value="year">Year</option>
-        <option value="author">Author</option>
-        <option value="title">Title</option>
-     </select>
+    What order would you like? (Separate selections by Commas)
+    <input id="columnOrder" type="text">   
     <br />
     <br />
     <br />
@@ -107,6 +172,7 @@
   </form>  
 </div>  
 <br />
+<div id="help"> </div>
 <br />
 <br />
 <div id="tableArea"> </div>

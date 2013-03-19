@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<link rel="stylesheet" type="text/css" href="style.css" />
+<link rel="stylesheet" type="text/css" href="file:///H|/public_www/style.css" />
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>Exercise 2</title> 
 <script type="text/javascript">
@@ -10,10 +10,7 @@
 		
 	  if(window.XMLHttpRequest)
 	  	{
-		xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
-		xmlDoc.async=false;
-		xmlDoc.load(url);
-		return xmlDoc
+		xhr=new XMLHttpRequest();
 		} 
 	else //internet explorer
 		{
@@ -22,6 +19,23 @@
 	  xhr.open("GET",url,false);
 	  xhr.send("");
 	  return xhr.responseXML;
+	}
+	
+	function getThirdLevel(){
+		
+		var getTheFile = document.getElementById("thirdFile").value;	
+		var xmlDoc = loadXML(getTheFile);
+		var root = xmlDoc.documentElement;
+		var thirdLevel = root.childNodes[1].childNodes;
+		var div = document.getElementById("elementArea");
+		var elStuff = "<ul>";
+		for(var i = 1; i < thirdLevel.length; i = i+2){
+			elStuff += "<li>" + thirdLevel[i].nodeName + "</li>";
+		}
+		elStuff += "</ul>";
+		div.removeChild(div.firstChild);
+		div.innerHTML+= elStuff;
+		return null;
 	}
 	
 	function showXML(){
@@ -33,45 +47,18 @@
 		
 		//retrieve timespan of return table desired
 		var beforeAfter = document.getElementById("date");
-			var afterBefore = beforeAfter.options[beforeAfter.selectedIndex].value;
-			var yearChoice = document.getElementById("year");
-			var choiceYear = yearChoice.options[yearChoice.selectedIndex].value;
-			
-			var yearSort = "*";
-			
-			//concatenate xpath predicate
-			if(yearChoice !="" && beforeAfter !="" && yearChoice !=null && beforeAfter !=null){
-				yearSort += "year[" + afterBefore + choiceYear + "]";
-			}
-			
-			 //setting the default values is user leaves dropdowns blank
-			var sortBy = "year";   
-				   
-			var table = stylesheet.getElementsByTagName("table");
-			
-		  //initial values
-		  var columnOrder = "*";
-		  var tableHeader = "*[1]/";
-		  var tableHeadSpace = "*[1]/";
-		  
-		  var columnChoice = document.getElementById("columnOrder");
-		  
-		  if(columnChoice != null && columnChoice != ""){
-			  columnOrder = "";
-			  var columnSplit = columnChoice.split(",");
-			  for(var i = 0; i < columnSplit.length; i++){
-				  columnOrder += columnSplit[i];
-				  tableHeader += columnSplit[i];
-				  if(i !=(columnSplit.length-1)){
-					  columnChoice+= " | ";
-					  tableHeadSpace += (" | " + tableHeadSpace);
-				  }
-			  }
-		  }
-		  
-		  //Bri
-		  var headerVariables = stylesheet.getElementsByTagName("xsl:for-each");
-		  var getElements = stylesheet.getElementsByTagName("tr");
+		var afterBefore = beforeAfter.options[beforeAfter.selectedIndex].value;
+		var yearChoice = document.getElementById("year");
+		var choiceYear = yearChoice.options[yearChoice.selectedIndex].value;
+		
+		var yearSort = "*";
+		
+		//concatenate xpath predicate
+		if(yearChoice !="" && beforeAfter !="" && yearChoice !=null && beforeAfter !=null){
+			yearSort += "[year" + afterBefore + choiceYear + "]";
+		} 
+			   
+		var table = stylesheet.getElementsByTagName("table");
 		
 		//Checks if Firefox
 		if (document.implementation && document.implementation.createDocument){
@@ -87,43 +74,22 @@
                    stylesheet, nsResolver,
                    XPathResult.ANY_UNORDERED_NODE_TYPE, null);
 			
-			var columnDisplay = getElements[0].firstElementChild;
-			columnDisplay.setAttribute("select", columnOrder);
 			
 			//if the user chose a timespan
 			if(yearSort !="*"){
-				var yearOrg = table[0].firstElementChild;
-				yearOrg = setAttribute("select", yearSort);
+				var yearOrg = table[0].childNodes;
+				yearOrg[3].setAttribute("select", yearSort);
 			}
-			
-			//column titles
-			if(tableHeader != "*[1]/"){
-				var headline = headerVariables[0]
-				headline.setAttribute("select", tableHeader);
-			}
-			
-			value.singlNodeValue.setAttribute("select", sortBy);
 
 		  var proc = new XSLTProcessor();
 		  proc.importStylesheet(stylesheet);
 		  
 		  var resultFragment = proc.transformToFragment(xmlDoc, document);
+		  //document.write(yearSort);
 		  document.getElementById("tableArea").appendChild(resultFragment);
 		  
 		 //if using Windows 
-		}/* else {
-    		var value = stylesheet.selectSingleNode(
-            "//xsl:sort");
-    		value.setAttribute("select", "description");
-		   var xslt = new ActiveXObject("Msxml2.XSLTemplate");
-		   var xslDoc = new ActiveXObject("Msxml2.FreeThreadedDOMDocument");
-		   xslDoc.loadXML(xsltDoc.xml);
-		   xslt.stylesheet = xslDoc;
-		   var xslProc = xslt.createProcessor();
-		   xslProc.input = xmlDoc;
-		   xslProc.transform();
-		   return xslProc.output;
-		}*/
+		}
 	return false;
 	}
 	
@@ -140,7 +106,21 @@
 </head>
 
 <body onLoad="populateDropdown()">
-
+<div id="thirdLevel">
+What File would you like to see the third level Elements of?
+<br />
+<br />
+	<form>
+    	<input id="thirdFile" type="text" />
+    <input type="button" value="Show Those Kids" onclick="getThirdLevel()"/>
+    </form>
+</div>
+<br />
+<br />
+<div id="elementArea">
+</div>
+<br />
+<br />
 <div id="getFile">
   <form method="post" onSubmit="return showXML()">
     Which XML file should I load?
@@ -153,8 +133,8 @@
         <option value=">">After</option>
         <option value="<">Before</option>
     </select>
-    <select name="year" id="year">
-    	<option id="getYear" class="blank" ></option>
+    <select id="year">
+    	<option class="blank" ></option>
     </select>
     <br />
     <br />

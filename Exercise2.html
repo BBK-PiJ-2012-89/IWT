@@ -10,7 +10,10 @@
 		
 	  if(window.XMLHttpRequest)
 	  	{
-		xhr=new XMLHttpRequest();
+		xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
+		xmlDoc.async=false;
+		xmlDoc.load(url);
+		return xmlDoc
 		} 
 	else //internet explorer
 		{

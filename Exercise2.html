@@ -1,9 +1,33 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<link rel="stylesheet" type="text/css" href="file:///H|/public_www/style.css" />
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>Exercise 2</title> 
+<style type="text/css">
+h2 {
+	text-align:center;
+	font-family: Arial;
+	text-decoration:underline;
+	color:grey;
+}
+body{
+	color:#6699CC;
+	font-family:"MS Serif", "New York", serif;
+	background-color:#FFFFF3;
+}
+#tableArea{
+	text-align:center;
+	color: #F9C
+	background-color:#999;
+}
+#elementArea{
+	table-layout:auto;
+	text-align:center;
+	font-size:24px;
+	text-decoration:underline;
+
+}
+</style>
 <script type="text/javascript">
 	
 	function loadXML(url) {
@@ -39,25 +63,56 @@
 	}
 	
 	function showXML(){
-		
+
 		//get and load xml and xsl files
-		var getTheFile = document.getElementById("getAFile").value;		
+		var getTheFile = document.getElementById("thirdFile").value;		
 		var xmlDoc = loadXML(getTheFile);	
 		var stylesheet = loadXML("exercise1.xsl");
 		
-		//retrieve timespan of return table desired
-		var beforeAfter = document.getElementById("date");
-		var afterBefore = beforeAfter.options[beforeAfter.selectedIndex].value;
-		var yearChoice = document.getElementById("year");
-		var choiceYear = yearChoice.options[yearChoice.selectedIndex].value;
+		//retrieve xpath predicate of return table desired		
+		var predicate = document.getElementById("predicate").value;
 		
-		var yearSort = "*";
+		var sorter = document.getElementById("sortBy").value;
+		var orderer = document.getElementById("orderBy").value;
+		
+		if(orderer == "" || orderer == null){
+			orderer == "ascending";
+		}
+		
+		if(sorter == "" || sorter == null){
+			sorter == "year";
+		}
+		
+		var columns = "*";
+		var defaultHeader = "*[1]/";
+		var standInHeader = "*[1]/";
+		
+		var columnOrder = document.getElementById('columnOrder').value;
+		
+		if(columnOrder!= null && columnOrder!= ""){
+			var columnOrderer = columnOrder.split(" ");
+			columns = ""
+			for(var i = 0; i < columnOrderer.length; i++){
+				columns+=columnOrderer[i];
+				defaultHeader+=columnOrderer[i];
+				if(i!=columnOrderer.length-1){
+					columns+=" | ";
+					defaultHeader+= " | " + standInHeader;
+				}
+			}
+		}
+	
+		var defaultPredicate = "*";
+		
+		
+		var columnNumber = stylesheet.getElementsByTagName("tr");
+		var columnHeader = stylesheet.getElementsByTagName("xsl:for-each");
 		
 		//concatenate xpath predicate
-		if(yearChoice !="" && beforeAfter !="" && yearChoice !=null && beforeAfter !=null){
-			yearSort += "[year" + afterBefore + choiceYear + "]";
+		if(predicate !="" && predicate !=null){
+			defaultPredicate += "[" + predicate + "]";
 		} 
-			   
+	   
 		var table = stylesheet.getElementsByTagName("table");
 		
 		//Checks if Firefox
@@ -73,39 +128,50 @@
                    "//xsl:sort",
                    stylesheet, nsResolver,
                    XPathResult.ANY_UNORDERED_NODE_TYPE, null);
-			
-			
+				if(sorter!= ""){   
+			value.singleNodeValue.setAttribute("select", sorter);
+				} 
+				if(orderer!= ""){  
+			value.singleNodeValue.setAttribute("order", orderer);
+				}
+				
 			//if the user chose a timespan
-			if(yearSort !="*"){
-				var yearOrg = table[0].childNodes;
-				yearOrg[3].setAttribute("select", yearSort);
+			if(defaultPredicate !="*"){
+				var selector = table[0].childNodes;
+				selector[3].setAttribute("select", defaultPredicate);
 			}
-
+			
+			if(defaultHeader!="*[1]/"){
+				var tablaHeader = columnHeader[0];
+				tablaHeader.setAttribute("select", defaultHeader);
+			}
+			
+		  var columnFormer = columnNumber[0].firstElementChild;
+		  
+		  if(columns != "*"){
+			  columnFormer.setAttribute("select", columns);
+		  }
+			  
 		  var proc = new XSLTProcessor();
 		  proc.importStylesheet(stylesheet);
 		  
 		  var resultFragment = proc.transformToFragment(xmlDoc, document);
-		  //document.write(yearSort);
+		  //document.write(columns);
 		  document.getElementById("tableArea").appendChild(resultFragment);
 		  
 		 //if using Windows 
 		}
 	return false;
 	}
-	
-	function populateDropdown(){
-		var years = document.getElementById('year');
-		var option = document.createElement('option');
-		for(var i = 1900; i < 2013; i++){
-			option.text = i;
-			years.add(new Option(i, i));
-		}
-	}
 		
 </script>
 </head>
 
-<body onLoad="populateDropdown()">
+<body>
+<h2> <strong> Charlie Brodie's IWT Coursework #1</strong></h2>
+<br />
+<br />
+<br />
 <div id="thirdLevel">
 What File would you like to see the third level Elements of?
 <br />
@@ -123,19 +189,9 @@ What File would you like to see the third level Elements of?
 <br />
 <div id="getFile">
   <form>
-    Which XML file should I load?
-    <input id="getAFile" type="text">
-    <br />
-    <br />
-    Timespan:   
-    <select id="date">
-    	<option class="blank"/>
-        <option value=">">After</option>
-        <option value="<">Before</option>
-    </select>
-    <select id="year">
-    	<option class="blank" ></option>
-    </select>
+    XPath Predicate:   
+    <input id="predicate" type="text">	
+    </input>
     <br />
     <br />
     Sort By:	
@@ -145,8 +201,15 @@ What File would you like to see the third level Elements of?
         <option value="author">Author</option>
         <option value="title">Title</option>
    	</select>
+    Order By:
+    <select id="orderBy">
+    	<option class="blank"/>
+        <option value="ascending">Ascending</option>
+        <option value="descending">Descending</option>
+       </select>
     <br />
-    What order would you like? (Separate selections by Commas)
+    <br />
+    What order would you like? (Separate selections by spaces) 
     <input id="columnOrder" type="text">   
     <br />
     <br />
@@ -155,7 +218,6 @@ What File would you like to see the third level Elements of?
   </form>  
 </div>  
 <br />
-<div id="help"> </div>
 <br />
 <br />
 <div id="tableArea"> </div>
